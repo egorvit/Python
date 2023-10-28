@@ -1,0 +1,66 @@
+endpoints:
+  - name: node_exporter
+    group: {hostname}
+    url: "https://{host_address}:9100/metrics"
+    interval: 24h
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+
+  - name: nvme_exporter
+    group: {hostname}
+    url: "https://{host_address}:9998/metrics"
+    interval: 24h
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+
+  - name: dns_record
+    group: {hostname}
+    url: "8.8.8.8" # Address of the DNS server to use
+    interval: 24h
+    dns:
+      query-name: "{hostname}.rpc.p2p.world"
+      query-type: "A"
+    conditions:
+      - "[BODY] == {host_address}"
+      - "[DNS_RCODE] == NOERROR"
+      - "[DOMAIN_EXPIRATION] > 720h"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+
+  - name: consul_record_node_exporter
+    group: {hostname}
+    url: "http://consul:8500/v1/agent/services"
+    interval: 24h
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+        - "has([BODY]) == {hostname}_node_exporter"
+
+  - name: consul_record_nvme_exporter
+    group: {hostname}
+    url: "http://consul:8500/v1/agent/services"
+    interval: 24h
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+        - "has([BODY]) == {hostname}_nvme_exporter"
+
+    #------------------------------------------
+
+  - name: haproxy_exporter
+    group: {hostname}
+    url: "https://{host_address}:9101/metrics"
+    interval: 24h
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+
+  - name: consul_record_haproxy_exporter
+    group: {hostname}
+    url: "http://consul:8500/v1/agent/services"
+    interval: 24h
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1000"
+        - "has([BODY]) == {hostname}_haproxy_exporter"
